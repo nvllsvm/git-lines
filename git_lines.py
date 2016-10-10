@@ -6,6 +6,14 @@ import subprocess
 from datetime import datetime
 
 
+class Filters(object):
+    def commit(self, commit):
+        return True
+
+    def blob(self, blob):
+        return True
+
+
 class Repo(object):
     def __init__(self, directory):
         self.directory = directory
@@ -58,31 +66,26 @@ def run_command(cmd, cwd=None):
     return output
 
 
-def get_lines(repo_directory, cache=None,
-              commit_filter=None, blob_filter=None):
+def get_lines(repo_directory, cache=None, filters=Filters()):
     if not cache:
         cache = {}
 
     repo = Repo(repo_directory)
 
     for commit in repo.get_commits():
-        if commit_filter and not commit_filter(commit):
-            continue
+        if filters.commit(commit):
+            lines = 0
+            for blob in commit.get_blobs():
+                if filters.blob(blob):
+                    if blob.blob not in cache.keys():
+                        cache[blob.blob] = blob.num_lines
 
-        lines = 0
-        for blob in commit.get_blobs():
-            if blob_filter and not blob_filter(blob):
-                continue
+                    lines += cache[blob.blob]
 
-            if blob.blob not in cache.keys():
-                cache[blob.blob] = blob.num_lines
-
-            lines += cache[blob.blob]
-
-        print('{} {} {} {}'.format(commit.timestamp.strftime('%Y-%m-%d'),
-                                   commit.timestamp.strftime('%H:%M:%S'),
-                                   commit.commit,
-                                   lines))
+            print('{} {} {} {}'.format(commit.timestamp.strftime('%Y-%m-%d'),
+                                       commit.timestamp.strftime('%H:%M:%S'),
+                                       commit.commit,
+                                       lines))
 
     return cache
 
