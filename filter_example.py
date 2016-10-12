@@ -7,12 +7,12 @@ import git_lines
 
 
 class ExampleFilters(git_lines.Filters):
-    history = []
+    commit_history = []
 
     def commit(self, commit):
         ym = commit.timestamp.strftime('%Y-%m')
-        if ym not in self.history:
-            self.history.append(ym)
+        if ym not in self.commit_history:
+            self.commit_history.append(ym)
             if commit.timestamp.year == 2014 and commit.timestamp.month >= 10:
                 return True
             elif commit.timestamp.year > 2014:
